@@ -31,7 +31,7 @@ export class SignalingServer extends EventEmitter {
     #pendingOffers: Map<string, string>
     #connections: Map<string, boolean>
     #peerMap: Map<string, Peer>
-
+    #emitter: EventEmitter
     /**
      *
      * @param {Object} config signaling server configuration options
@@ -52,7 +52,8 @@ export class SignalingServer extends EventEmitter {
         // * Install Handlers
         this.#wss.on('connection', this.connectionHandler)
 
-        // * Setup Event
+        // * Setup Event Emiiter
+        this.#emitter = new EventEmitter()
     }
 
     /**
@@ -195,6 +196,12 @@ export class SignalingServer extends EventEmitter {
             }`,
             true
         )
+
+        // * Emit event indicating peers have upgraded
+        this.#emitter.emit('p2pupgrade', [
+            (data.source.address() as AddressInfo).address,
+            payload.target
+        ])
     }
 
     /**
