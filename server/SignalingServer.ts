@@ -184,11 +184,15 @@ export class SignalingServer extends EventEmitter {
 
         // * Add Connection to connection store (both directions)
         this.#connections.set(
-            `${(data.source.address() as AddressInfo).address}#${payload.target}`,
+            `${payload.channel}/${(data.source.address() as AddressInfo).address}#${
+                payload.target
+            }`,
             true
         )
         this.#connections.set(
-            `${payload.target}#${(data.source.address() as AddressInfo).address}`,
+            `${payload.channel}/${payload.target}#${
+                (data.source.address() as AddressInfo).address
+            }`,
             true
         )
     }
@@ -290,24 +294,16 @@ export class SignalingServer extends EventEmitter {
         }
         const message = data as CandidateMessage
         const { payload } = message
-        // * Check if connection between peers exist
-        if (
-            this.#connections.get(
-                `${(message.source.address() as AddressInfo).address}#${payload.target}`
-            )
-        ) {
-            // * * * If so, relay candidate to target
-            this.#peerMap.get(payload.target).connection.write(
-                JSON.stringify({
-                    type: 'candidate',
-                    payload: {
-                        candidate: payload.candidate
-                    }
-                })
-            )
-        } else {
-            throw new Error("Connection doesn't exist between peers")
-        }
+
+        // * * * If so, relay candidate to target
+        this.#peerMap.get(payload.target).connection.write(
+            JSON.stringify({
+                type: 'candidate',
+                payload: {
+                    candidate: payload.candidate
+                }
+            })
+        )
     }
     /**
      * @description
